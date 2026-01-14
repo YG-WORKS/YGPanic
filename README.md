@@ -30,3 +30,10 @@ A standalone, duress alarm (Panic Button) script to work with FiveM.
 ## 🆘 Help
 
 If you run into issues and require any help, please raise a ticket in my [**discord server**](https://discord.gg/BAzXz7cXrr).
+
+--
+
+## 🌐 Socials
+
+- **YGHQ** [**Discord**](https://discord.gg/BAzXz7cXrr) - ***YG_WORKS HQ***
+- **WestAusRP** [**Discord**](https://discord.gg/duGgjES) - ***FiveM Server***
