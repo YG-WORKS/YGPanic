@@ -1,0 +1,103 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+}
+
+.unit-counter {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.85);
+    border-radius: 8px;
+    padding: 12px 16px;
+    min-width: 220px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: opacity 0.3s ease;
+}
+
+.unit-counter.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.header {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.department-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.department-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border-left: 3px solid;
+    transition: all 0.2s ease;
+}
+
+.department-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(2px);
+}
+
+.department-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.department-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.department-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.department-count {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    min-width: 30px;
+    text-align: right;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+/* Offline departments (0 units) */
+.department-item.offline {
+    opacity: 0.5;
+}
+
+.department-item.offline .department-count {
+    background: rgba(255, 255, 255, 0.05);
+}

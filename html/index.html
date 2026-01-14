@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Panic System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        #unit-counter {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px;
+            background: rgba(17, 24, 39, 0.9);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            min-width: 200px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: opacity 0.3s ease;
+        }
+
+        #unit-counter.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .header {
+            font-size: 14px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.95);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+            text-align: center;
+        }
+
+        .department {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: rgba(31, 41, 55, 0.6);
+            border-radius: 6px;
+            border-left: 4px solid;
+            transition: all 0.2s ease;
+        }
+
+        .department:hover {
+            background: rgba(31, 41, 55, 0.8);
+            transform: translateX(3px);
+        }
+
+        .dept-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dept-logo {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        .dept-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.95);
+            letter-spacing: 0.5px;
+        }
+
+        .dept-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .count-badge {
+            min-width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.12);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .online-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        .offline-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+            opacity: 0.6;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(0.95);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Unit Counter UI -->
+    <div id="unit-counter">
+        <div class="header">🚨 Active Units</div>
+        <div id="departments-container"></div>
+    </div>
+
+    <!-- Audio for duress alert -->
+    <audio id="panicSound" src="panic.ogg" preload="auto"></audio>
+
+    <script>
+        let config = null;
+        let isVisible = true;
+
+        // Listen for messages from Lua
+        window.addEventListener('message', (event) => {
+            const data = event.data;
+
+            // Handle original panic sound (your existing code)
+            if (data.action === 'playSound') {
+                const audio = document.getElementById('panicSound');
+                audio.currentTime = 0;
+                audio.volume = 1.0;
+                audio.play().catch(() => {});
+                return;
+            }
+
+            // Handle unit counter messages (new functionality)
+            switch(data.type) {
+                case 'setConfig':
+                    config = data.config;
+                    applyConfig();
+                    break;
+                
+                case 'updateCounts':
+                    updateCounts(data.counts);
+                    break;
+                
+                case 'toggleUI':
+                    isVisible = data.visible;
+                    toggleVisibility();
+                    break;
+            }
+        });
+
+        function applyConfig() {
+            if (!config) return;
+
+            const counter = document.getElementById('unit-counter');
+            
+            // Position the UI
+            counter.style.left = `${config.UIPosition.x * 100}%`;
+            counter.style.top = `${config.UIPosition.y * 100}%`;
+
+            // Create department elements
+            const container = document.getElementById('departments-container');
+            container.innerHTML = '';
+
+            config.Departments.forEach(dept => {
+                const deptDiv = document.createElement('div');
+                deptDiv.className = 'department';
+                deptDiv.id = `dept-${dept.name}`;
+                
+                const color = dept.color;
+                const colorStr = `rgb(${color.r}, ${color.g}, ${color.b})`;
+                deptDiv.style.borderLeftColor = colorStr;
+
+                deptDiv.innerHTML = `
+                    <div class="dept-info">
+                        <img src="images/${dept.name.toLowerCase()}_logo.png" 
+                             alt="${dept.displayName}" 
+                             class="dept-logo"
+                             onerror="this.style.display='none'">
+                        <span class="dept-name">${dept.displayName}</span>
+                    </div>
+                    <div class="dept-count">
+                        <div class="offline-indicator"></div>
+                        <div class="count-badge">0</div>
+                    </div>
+                `;
+
+                container.appendChild(deptDiv);
+            });
+        }
+
+        function updateCounts(counts) {
+            if (!config) return;
+
+            config.Departments.forEach(dept => {
+                const deptEl = document.getElementById(`dept-${dept.name}`);
+                if (!deptEl) return;
+
+                const count = counts[dept.name] || 0;
+                const badge = deptEl.querySelector('.count-badge');
+                const indicator = deptEl.querySelector('.online-indicator, .offline-indicator');
+
+                badge.textContent = count;
+
+                // Update indicator
+                if (count > 0) {
+                    indicator.className = 'online-indicator';
+                } else {
+                    indicator.className = 'offline-indicator';
+                }
+
+                // Hide department if offline and ShowOffline is false
+                if (!config.ShowOffline && count === 0) {
+                    deptEl.style.display = 'none';
+                } else {
+                    deptEl.style.display = 'flex';
+                }
+            });
+        }
+
+        function toggleVisibility() {
+            const counter = document.getElementById('unit-counter');
+            if (isVisible) {
+                counter.classList.remove('hidden');
+            } else {
+                counter.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
